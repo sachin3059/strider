@@ -3,6 +3,7 @@ import cors from 'cors'
 import 'dotenv/config'
 import connectDB from './config/mongodb.js';
 import userRouter from './routes/userRouter.js';
+import driverRouter from './routes/driverRouter.js';
 
 
 // app config
@@ -19,6 +20,7 @@ app.use(cors());
 // api endpoints
 
 app.use('/api/user', userRouter);
+app.use('/api/driver', driverRouter)
 // localhost:4000/api/user/register
 
 app.get('/', (req, res) => {
