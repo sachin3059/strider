@@ -1,4 +1,6 @@
 import jwt from 'jsonwebtoken';
+import userModel from '../models/userModels.js';
+import blacklistModel from '../models/blacklistModels.js';
 
 // user authentication middleware
 
@@ -12,6 +14,15 @@ const authUser = async(req, res, next) => {
                 success: false,
                 message: 'Invalid credentials'
             })
+        }
+
+        const isBlacklisted = await blacklistModel.findOne({token: token});
+
+        if(isBlacklisted){
+            return res.json({
+                success: false,
+                message: 'unauthorized'
+            });
         }
 
         const token_decode = jwt.verify(token, process.env.JWT_SECRET);

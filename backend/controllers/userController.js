@@ -1,7 +1,8 @@
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import jwt, { decode } from 'jsonwebtoken';
 import validator from 'validator';
 import userModel from '../models/userModels.js';
+import blacklistModel from '../models/blacklistModels.js';
 import {v2 as cloudinary} from 'cloudinary';
 
 
@@ -53,7 +54,7 @@ const registerUser = async (req, res) => {
         // now create a token so that user can able to login
         // this can be using _id of newUser
 
-        const token = jwt.sign({id: user._id}, process.env.JWT_SECRET);
+        const token = jwt.sign({id: user._id}, process.env.JWT_SECRET, {expiresIn: '24h'});
 
         res.json({
             success: true,
@@ -157,7 +158,7 @@ const updateProfile = async (req, res) => {
         
     } catch (error) {
         console.log(error);
-        res.json({
+        return res.json({
             success: false,
             message: error.message
         })
@@ -166,27 +167,47 @@ const updateProfile = async (req, res) => {
 }
 
 
-// API for logout user:
+// API for user logout:
 
-const logout = async(req, res) => {
+const logoutUser = async(req, res) => {
     try {
-        const { userId } = req.body;
+        const token = req.header('userToken') || req.header('usertoken');
+        // ***token will be clear from local storage from frontend:
         
+        if(!token){
+            return res.json({
+                success: false,
+                message: 'No token provided'
+            })
+        }
+
+
+        const blacklistedToken = new blacklistModel({token})
+        await blacklistedToken.save();
+
+        return res.json({
+            success: true,
+            message: 'user logout and token blacklisted'
+        })
         
     } catch (error) {
-        console.error(error);
-        res.json({
+        console.log(error);
+        return res.json({
             success: false,
             message: error.message
         })
         
     }
 }
+
+
+
 
 
 export {
     registerUser,
     loginUser,
     getProfile,
-    updateProfile
+    updateProfile,
+    logoutUser
 }
